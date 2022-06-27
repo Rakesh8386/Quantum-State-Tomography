@@ -232,10 +232,5 @@ state1 = qi.DensityMatrix(rho)
 
 
 #fidelity Check
-fidelity1 = qi.state_fidelity(sv,state1,validate=False)
-
-
-
-
-
-print(fidelity1)
+fidelity = qi.state_fidelity(sv,state1,validate=False)
+print(fidelity)
