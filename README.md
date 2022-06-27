@@ -1,0 +1,2 @@
+# Quantum-State-Tomography
+It is impossible to know the state of an unknown quantum system because, after the measurement, the state of a quantum system collapses to one of the possible states of that quantum system. Luckily, we have experts in this field who have developed 'Quantum State Tomography', by which one can calculate the state of an unknown quantum system if multiple quantum systems, ideal to that anonymous quantum system, are present.
