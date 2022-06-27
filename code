@@ -1,0 +1,241 @@
+#math and array functions
+import numpy as np
+
+#functions to analyse data 
+import pandas as pd
+
+#symbolic functions
+import sympy as sp
+
+#qiskit functions
+import qiskit as qk
+import qiskit.quantum_info as qi
+
+#tomography functions
+from qiskit.ignis.verification.tomography import state_tomography_circuits
+
+#IBMQ functions
+from qiskit import IBMQ
+
+# Visualization
+from qiskit.visualization import plot_state_city
+
+
+
+
+#load IBM QX account
+IBMQ.load_account()
+
+#show available probiders in you IBM QX account
+IBMQ.providers()
+
+#get a real device for the execution
+provider = ......
+device = .......	
+
+
+#Quantum Circuit Formation
+#number of qubits
+n_q = 6
+
+#quantum registers
+q_reg = qk.QuantumRegister(n_q, 'qr') 
+
+#quantum Circuit
+qc = qk.QuantumCircuit(q_reg)
+qc.h(0)
+qc.cx(0,list(range(1,n_q)))
+qc.draw(output='mpl')
+
+
+
+#Statevector
+sv = qk.quantum_info.Statevector.from_instruction(qc)
+
+
+
+
+#creating list of tomography circuits
+qst_cr = state_tomography_circuits(qc, q_reg)
+
+
+
+
+#allowed number of experiments per job
+max_circuits = device.configuration().max_experiments
+
+#creating circuit list
+all_cir_list = []
+cir_list = []
+for i in qst_cr:
+    cir_list.append(i)
+    if len(cir_list)==max_circuits:
+        all_cir_list.append(cir_list)
+        cir_list = []
+all_cir_list.append(cir_list)
+
+
+
+
+#extracting counts from every execution
+job_counts = []
+for i in range(len(all_cir_list)):
+    #job = qk.execute(all_cir_list[i], device, shots = 1024)
+    job = qk.execute(all_cir_list[i], device, shots = 1024)
+    result = job.result()
+    counts = result.get_counts
+    job_counts.append(counts)
+    
+    
+    
+    
+#list of each circuit's count
+count_list = []
+for i in range(len(all_cir_list)):
+    for j in range(len(all_cir_list[i])):
+        count = job_counts[i](j)
+        count_list.append(count)
+	
+	
+	
+	
+#save the count data as a csv file
+df = pd.DataFrame(count_list)
+df.fillna(value = 0, inplace = True) #removing any NaN values
+df.to_csv('count_list.csv')
+
+
+
+
+#number of for loops are equal to number of qubits. To increase or decrease number of loops also keep in mind to edit 'val'
+q_0 = np.matrix([[1],[0]])# |0>
+q_1 = np.matrix([[0],[1]])# |1>
+q_i = q_0 + q_1
+q_x = q_0 - q_1
+q_y = q_0 - q_1
+q_z = q_0 - q_1
+sign_val = []
+for i in [q_i,q_x,q_y,q_z]:
+    for j in [q_i,q_x,q_y,q_z]:
+        for k in [q_i,q_x,q_y,q_z]:
+            for l in [q_i,q_x,q_y,q_z]:
+                for m in [q_i,q_x,q_y,q_z]:
+                    for n in [q_i,q_x,q_y,q_z]:
+                        val = np.kron(i,np.kron(j,np.kron(k,np.kron(l,np.kron(m,n)))))
+                        sign_val.append(val)
+			
+			
+			
+			
+#Combination of I,X,Y,Z; Here we take I==X, as per the condition in calculating stockes perameter. we can also choose it Y or Z or mix them
+XXYZ_list = []
+for i in ['X','X','Y','Z']:
+    for j in ['X','X','Y','Z']:
+        for k in ['X','X','Y','Z']:
+            for l in ['X','X','Y','Z']:
+                for m in ['X','X','Y','Z']:
+                    for n in ['X','X','Y','Z']:
+                        XXYZ = str(i)+str(j)+str(k)+str(l)+str(m)+str(n)
+                        XXYZ_list.append(XXYZ)
+			
+			
+			
+			
+#Combination of X, Y, Z.
+XYZ_list = []
+for i in ['X','Y','Z']:
+    for j in ['X','Y','Z']:
+        for k in ['X','Y','Z']:
+            for l in ['X','Y','Z']:
+                for m in ['X','Y','Z']:
+                    for n in ['X','Y','Z']:
+                        XYZ = str(i)+str(j)+str(k)+str(l)+str(m)+str(n)
+                        XYZ_list.append(XYZ)
+			
+			
+			
+			
+#To make a list of numbers that maches the stockes perameter value for I,X,Y,Z and X,Y,Z.
+list_numbers = []
+for i in XXYZ_list:
+    for j, k in enumerate(XYZ_list):
+        if i==k:
+            list_numbers.append(j)
+            break
+	    
+	    
+	    
+	    
+#Create the all possible strings
+st_list = []
+for i in [0, 1]:
+    for j in [0, 1]:
+        for k in [0, 1]:
+            for l in [0, 1]:
+                for m in [0, 1]:
+                    for n in [0, 1]:
+                        st = str(n)+str(m)+str(l)+str(k)+str(j)+str(i)
+                        st_list.append(st)
+			
+			
+			
+			
+#read saved data
+my_meas_data = pd.read_csv('address to your saved csv file').to_dict()
+
+
+
+
+#T value
+T_value_list = []
+for i, j in enumerate(list_numbers):
+    T_value = 0
+    for k, l in enumerate(st_list):
+        T_value = T_value + ((sign_val[i][k,0])*my_meas_data[l][j])/1024
+    T_value_list.append(T_value)
+	
+	
+	
+	
+#pauli matrices
+I = np.matrix([[1,0],
+           [0,1]])
+X = np.matrix([[0,1],
+           [1,0]])
+Y = np.matrix([[0,-complex(0,1)],
+           [complex(0,1),0]])
+Z = np.matrix([[1,0],
+           [0,-1]])
+	   
+	   
+	   
+	   
+#Calculating Density matrix
+a = 0
+rho=0
+for i in [I,X,Y,Z]:
+    for j in [I,X,Y,Z]:
+        for k in [I, X, Y, Z]:
+            for l in [I, X, Y, Z]:
+                for m in [I, X, Y, Z]:
+                    for n in [I, X, Y, Z]:
+                        rho = rho + (.5**6)*(T_value_list[a])*(np.kron(n,np.kron(m,np.kron(l,np.kron(k,np.kron(j,i))))))
+                        a=a+1
+			
+			
+			
+			
+#Converting matrix to density matrix
+state1 = qi.DensityMatrix(rho)
+
+
+
+
+#fidelity Check
+fidelity1 = qi.state_fidelity(sv,state1,validate=False)
+
+
+
+
+
+print(fidelity1)
